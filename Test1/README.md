@@ -2,6 +2,49 @@
 
 已使用老师上传的真实语料运行。仅用 Python 标准库，无需安装第三方包；本次环境 Python 3.12.9，建议 Python 3.10 以上。未调用在线 API。
 
+## 模块化结构
+
+课程项目名称可记作 ChineseSegmentation，实际根目录沿用 `D:\desktop\NLP\Test1`（实验一），不新增重复的嵌套目录。
+
+```text
+Test1/
+├── data/                 # 原始语料、train.jsonl、test.jsonl
+├── dictionary.py         # 训练词典、FMM、RMM、BiMM
+├── hmm.py                # HMM 参数训练与 Viterbi 接口（待实现）
+├── llm.py                # Prompt、Few-shot 构建；在线 API 待接入
+├── bpe.py                # BPE 训练与切分接口（待实现）
+├── evaluate.py           # P/R/F1、OOV 召回、Fertility
+├── main.py               # 统一运行与结果输出
+├── requirements.txt      # 当前阶段无第三方依赖
+├── corpus.py             # 严格解码、清洗、审计与固定划分
+├── storage.py            # JSON / JSONL 输出
+├── check_modules.py      # 模块人工样例检查
+├── verify.py             # 保存结果的独立核验
+├── run.ps1               # Windows 运行入口
+└── results/              # 词典、预测、指标、错误案例与审计
+```
+
+现有 `documents/`、`history/` 等目录保留原样。代码重构未改动其中的资料。
+
+### 快速运行
+
+```powershell
+cd D:\desktop\NLP\Test1
+python main.py
+python check_modules.py
+python verify.py
+```
+
+也可以执行 `./run.ps1`。`main.py` 默认查找本项目的原始语料，输出到本项目的 `results/`；支持原有输入、输出路径和随机种子参数。`data/train.jsonl`、`data/test.jsonl` 是供后续方法复用的固定划分，`results/` 同名副本用于兼容现有核验。
+
+### 模块状态与调用关系
+
+`main.py → corpus.prepare_corpus → dictionary.build_dictionary → fmm/rmm/bimm → evaluate.evaluate_predictions → storage`。
+
+HMM 与 BPE 当前仅定义类和方法接口，调用会明确抛出 `NotImplementedError`；LLM 已实现 `build_messages(text, training_examples)`，但在线调用也尚未实现。默认运行只评测三种已完成的词典算法，不产生虚构的其他算法结果。`evaluate.fertility(token_count, original_word_count)` 已实现，待 BPE 完成后以同批标准词数为分母计算。
+
+重构验证：新旧数据划分、训练词典、完整预测、全部错误及典型案例逐文件哈希一致；所有非耗时评测指标保持一致。耗时因重新运行会波动，下文表格保留首次实测值，最新耗时见 `results/metrics.json`。
+
 ## 运行
 
 项目根目录：`D:\desktop\NLP\Test1`。代码、语料和结果均位于此目录，默认输出到 `D:\desktop\NLP\Test1\results`。
@@ -71,10 +114,10 @@ FMM 从左往右选最长词；RMM 从右往左选最长词；均在没有匹配
 - `*_errors.jsonl`：所有错误；`*_typical_errors.jsonl`：有 OOV 与无 OOV 各选最短的 10 条错误（固定排序，方便查看，不代表错误类别的分布）。
 - `pos_audit.jsonl`：两份语料逐行差异；`annotation_conflicts.jsonl`：同文本分词冲突，本次为空。
 
-main.py 内含方向匹配、BiMM 决策、OOV 回退、边界计数和组合词性解析的人工样例断言；verify.py 独立核对保存后的词典频次、集合交叉、预测文本及所有词级计数。
+check_modules.py 包含方向匹配、BiMM 决策、OOV 回退、边界计数、组合词性解析、Fertility 和 Few-shot 的人工样例断言；verify.py 独立核对保存后的词典频次、集合交叉、预测文本及所有词级计数。
 
 ## 如何放进老师的报告模板
 
-已读取模板，包含摘要、实验内容、实验原理、总框图、主要程序模块、实验结果、总结及参考文献。本阶段说明可分别填入这些栏目：内容写预处理与三种词典分词；原理写匹配规则与边界公式；框图写“严格解码→清洗去重→固定划分→训练词典→测试分词→评测与错误分析”；模块写 main.py 的对应函数；结果采用上表和三个错误案例。
+已读取模板，包含摘要、实验内容、实验原理、总框图、主要程序模块、实验结果、总结及参考文献。本阶段说明可分别填入这些栏目：内容写预处理与三种词典分词；原理写匹配规则与边界公式；框图写“严格解码→清洗去重→固定划分→训练词典→测试分词→评测与错误分析”；模块写 dictionary.py、corpus.py 和 evaluate.py 的对应函数；结果采用上表和三个错误案例。
 
 本阶段还未完成 HMM、在线大模型和 BPE，不应将阶段结果写成整个课程实验已经完成。完整报告后续控制在五页以内。

@@ -9,14 +9,22 @@
 ```text
 NLP/
 ├── README.md              # 实验目录总说明
-└── Test1/                 # 实验一：中文分词对比实验
-    ├── README.md          # 实验一的详细说明及阶段结果
-    ├── main.py            # 语料预处理、词典分词与评测
-    ├── verify.py          # 数据隔离与评测结果核验
+└── Test1/                 # 实验一：中文分词（ChineseSegmentation）
+    ├── README.md          # 详细运行说明、模块状态与阶段结果
+    ├── data/              # 原始语料、固定训练集和测试集
+    ├── dictionary.py      # FMM、RMM、BiMM 与训练词典
+    ├── hmm.py             # HMM 与 Viterbi 接口，待实现
+    ├── llm.py             # Prompt 与 Few-shot；API 待接入
+    ├── bpe.py             # BPE 接口，待实现
+    ├── evaluate.py        # P/R/F1、OOV 召回、Fertility
+    ├── main.py            # 统一运行与结果输出
+    ├── requirements.txt   # 当前仅使用标准库
+    ├── corpus.py          # 语料清洗、审计及划分
+    ├── storage.py         # 结果存储
+    ├── check_modules.py   # 模块样例核验
+    ├── verify.py          # 数据隔离与结果核验
     ├── run.ps1            # Windows 运行脚本
-    ├── verification.txt   # 已完成的复现核验记录
-    ├── data/              # 老师提供的原始语料副本
-    └── results/           # 数据划分、训练词典、指标和错误案例
+    └── results/           # 词典、指标、预测及错误案例
 ```
 
 ## 实验一：中文分词

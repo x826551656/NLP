@@ -1,1 +1,3 @@
-PASS: independent output verification; second full run reproduced splits, dictionary, predictions and non-timing metrics byte-for-byte.
+PASS: module checks and independent result verification.
+PASS: refactor preserves splits, dictionary, all predictions, all errors and non-timing metrics.
+PASS: canonical data/train.jsonl and data/test.jsonl equal result copies.
