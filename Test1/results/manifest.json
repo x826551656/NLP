@@ -1,0 +1,37 @@
+{
+  "seed": 2026,
+  "python": "3.12.9",
+  "sources": [
+    {
+      "file": "1998人民日报（分词）.txt",
+      "encoding": "gbk",
+      "bytes": 4804499,
+      "sha256": "97092a065c0097222b814e3653bf16cbd56cfa27831592d7bd690bb1565ace30",
+      "lines": 19484,
+      "prefix": "迈向 充满 希望 的 新 世纪 —— 一九九八年 新年 讲话 （ 附 图片 １ 张 ）\n中共中央 总书记 、 国家 主席 江 泽民\n（ 一九九七年 十二月 三十一日 ）\n１２月 ３１日 ， 中共中央 总书记 、 国家 主席 江 泽民 发表 １９９８年 新年 讲话 《 迈向 充满 希望 的 新 世纪 》 。 （ 新华社 记者 兰 红光 摄 ）\n同胞 们 、 朋友 们 、 女士 们 、 先生 们 ：\n在 １９９８年 来临 之际 ， 我 十分 高兴 地 通过 中央 人民 广播 电台 、 中国 国际 广播 电台 和 中央 电视台 ， 向 全国 各族 人民 ， 向 香港 特别 行政区 同胞 、 澳门 和 台湾 同胞 、 海外 侨胞 ， 向 世界 各国 的 朋友 们 ， 致以 诚挚 的 问候 和 良好 的 祝愿 ！\n１９９７年 ， 是 中国 发展 历史 上 非常 重要 的 很 不 平凡 的 一 年 。"
+    },
+    {
+      "file": "1998人民日报（带词性标注）.txt",
+      "encoding": "utf-8",
+      "bytes": 10215829,
+      "sha256": "999fedd5a8f5bc47fc88048282f87da3cd74cedcfa83c48c2c36ae6ee6bee708",
+      "lines": 19484,
+      "prefix": "迈向/v  充满/v  希望/n  的/u  新/a  世纪/n  ——/w  一九九八年/t  新年/t  讲话/n  （/w  附/v  图片/n  １/m  张/q  ）/w  \r\n中共中央/nt  总书记/n  、/w  国家/n  主席/n  江/nr  泽民/nr  \r\n（/w  一九九七年/t  十二月/t  三十一日/t  ）/w  \r\n１２月/t  ３１日/t  ，/w  中共中央/nt  总书记/n  、/w  国家/n  主席/n  江/nr  泽民/nr  发表/v  １９９８年/t  新年/t  讲话/n  《/w  迈向/v  充满/v  希望/n  的/u  新/a  世纪/n  》/w  。/w  （/w  新华社/nt  记者/n  兰/nr  红光/nr  摄/Vg  ）/w  \r\n同胞/n  们/k  、/w  朋友/n  们/k  、/w  女士/n"
+    }
+  ],
+  "blank_lines": 1,
+  "unique_texts_before_conflict_removal": 18993,
+  "duplicate_extra_lines": 490,
+  "conflicting_texts_excluded": 0,
+  "pos_mismatch_lines": 7921,
+  "retained_lines": 18993,
+  "train_lines": 15194,
+  "test_lines": 3799,
+  "dictionary_size": 49520,
+  "max_word_length": 22,
+  "train_test_text_overlap": 0,
+  "test_oov_rate": 0.02871122032559568,
+  "split_policy": "deduplicate raw text; exclude conflicting annotations; seeded shuffle; floor(0.8*N) train",
+  "metric_policy": "micro exact word spans [start,end), punctuation included; line-local offsets",
+  "pos_policy": "audit only, never add POS words or external dictionary to training"
+}
