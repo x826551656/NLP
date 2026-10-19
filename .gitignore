@@ -1,0 +1,23 @@
+# Local credentials (only the placeholder template is shared)
+.env
+.env.*
+!.env.sample
+
+# Python environments and generated caches
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+
+# Editor / operating-system local files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Reproducible generated experiment files; raw corpora remain tracked
+/Test1/results/
+/Test1/data/train.jsonl
+/Test1/data/test.jsonl
+/Test1/verification.txt

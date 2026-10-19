@@ -13,9 +13,9 @@ NLP/
     ├── README.md          # 详细运行说明、模块状态与阶段结果
     ├── data/              # 原始语料、固定训练集和测试集
     ├── dictionary.py      # FMM、RMM、BiMM 与训练词典
-    ├── hmm.py             # HMM 与 Viterbi 接口，待实现
-    ├── llm.py             # Prompt 与 Few-shot；API 待接入
-    ├── bpe.py             # BPE 接口，待实现
+    ├── hmm.py             # HMM 训练与 Viterbi 解码
+    ├── llm.py             # Prompt、Few-shot 与在线 API
+    ├── bpe.py             # BPE 训练与子词切分
     ├── evaluate.py        # P/R/F1、OOV 召回、Fertility
     ├── main.py            # 统一运行与结果输出
     ├── requirements.txt   # 当前仅使用标准库
@@ -31,16 +31,18 @@ NLP/
 
 实验目标：比较词典分词、HMM 分词、在线大模型分词与 BPE 子词切分的表现。
 
-当前已完成第一阶段：
+当前已完成：
 
 - 检查真实编码与语料格式，清洗并去重。
 - 使用固定随机种子，按约 80% / 20% 划分训练集和测试集。
 - 仅从训练集构建词典，自行实现 FMM、RMM、BiMM。
 - 按词的完整起止边界计算 Precision、Recall、F1。
-- 保存完整预测、典型错误案例与语料差异审计记录。
+- 实现 BMES HMM 参数训练与 Viterbi 解码，训练集原文上的 BPE 词表学习。
+- 实现在线大模型 Prompt、训练集 Few-shot、API 重试、缓存及严格输出校验。
+- 保存完整预测、典型错误案例、方向歧义候选、Fertility 与语料审计记录。
 - 核验训练与测试文本不重叠，词典词频只来自训练集。
 
-HMM、在线大模型 API 和 BPE 尚未接入。数据采用行级划分，未保证同一文章的不同段落完全隔离。
+HMM/Viterbi 与 BPE 已实现并在完整测试集实际运行；在线大模型客户端、缓存与校验已实现，并已完成 DeepSeek Flash 的 100 条真实在线实验。数据采用行级划分，未保证同一文章的不同段落完全隔离。
 
 详细说明见 [实验一 README](Test1/README.md)。
 
@@ -67,3 +69,10 @@ python Test1/verify.py
 - 训练词典、HMM 和 BPE 时仅使用训练集；大模型 few-shot 示例也只从训练集选取。
 - API 密钥通过环境变量配置，不写入源码或提交到版本库。
 - 新实验使用 `Test2/`、`Test3/` 等独立目录，并在各目录维护对应的运行说明。
+## 统一配置
+
+全项目使用根目录 `.env`，参考 `.env.sample`。在线入口自动加载，无需另设 PowerShell 环境变量；文件配置优先。运行：`python Test1/main.py --with-llm --llm-limit 100`。实际密钥不提交版本库。
+
+## 给同学复现
+
+先阅读 [复现指南](Test1/REPRODUCE.md)。原始语料随仓库保存，运行结果由程序重新生成；参考指标独立保存在 `Test1/reference_results/`。根目录 `.env.sample` 是占位模板，真实 `.env`、API 缓存及生成结果不提交。

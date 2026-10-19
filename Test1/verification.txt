@@ -1,3 +1,0 @@
-PASS: module checks and independent result verification.
-PASS: refactor preserves splits, dictionary, all predictions, all errors and non-timing metrics.
-PASS: canonical data/train.jsonl and data/test.jsonl equal result copies.

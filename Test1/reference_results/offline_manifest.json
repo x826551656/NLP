@@ -1,4 +1,10 @@
 {
+  "bpe_config": {
+    "target_vocab_size": 8000,
+    "max_merges": 500,
+    "actual_vocab_size": 5069,
+    "actual_merges": 500
+  },
   "seed": 2026,
   "python": "3.12.9",
   "sources": [

@@ -25,7 +25,8 @@ def evaluate_predictions(test, predictions, vocab, name, elapsed):
     correct = predicted = exact = oov_correct = 0
     errors, records = [], []
     for row, pred in zip(test, predictions):
-        assert ''.join(pred) == row['text']
+        if not isinstance(pred, list) or any(not isinstance(w, str) or not w for w in pred) or ''.join(pred) != row['text']:
+            raise ValueError('预测必须为非空词字符串列表且完整保留原文')
         gold_spans, pred_spans = spans(row['words']), spans(pred)
         correct += len(gold_spans & pred_spans)
         predicted += len(pred)
@@ -44,13 +45,14 @@ def evaluate_predictions(test, predictions, vocab, name, elapsed):
         if pred != row['words']:
             errors.append(record)
     p, r = correct / predicted, correct / total_gold
-    metric = {'method': name, 'precision': p, 'recall': r, 'f1': 2*p*r/(p+r),
+    metric = {'method': name, 'precision': p, 'recall': r, 'f1': 2*p*r/(p+r) if p+r else 0.0,
               'correct_words': correct, 'predicted_words': predicted,
               'gold_words': total_gold, 'exact_lines': exact,
               'test_lines': len(test), 'oov_words': oov_total,
-              'oov_correct': oov_correct, 'oov_recall': oov_correct/oov_total if oov_total else None,
+              'oov_correct': oov_correct, 'iv_recall': (correct-oov_correct)/(total_gold-oov_total) if total_gold > oov_total else None,
+              'oov_rate': oov_total/total_gold, 'oov_recall': oov_correct/oov_total if oov_total else None,
               'segmentation_seconds': elapsed,
-              'characters_per_second': sum(len(r['text']) for r in test)/elapsed}
+              'characters_per_second': sum(len(r['text']) for r in test)/elapsed if elapsed > 0 else None}
     return metric, records, errors
 
 

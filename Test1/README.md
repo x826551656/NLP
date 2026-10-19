@@ -1,123 +1,144 @@
-# 实验一：中文分词实验（第一阶段）
+# 实验一：中文分词对比实验
 
-已使用老师上传的真实语料运行。仅用 Python 标准库，无需安装第三方包；本次环境 Python 3.12.9，建议 Python 3.10 以上。未调用在线 API。
+项目根目录是 `NLP/`，本实验位于 `Test1/`。下文所有命令、输入路径和输出路径均相对于 NLP 根目录。Python 3.10 以上，仅使用标准库，无第三方依赖。
 
-## 模块化结构
-
-项目根目录为 `NLP/`，`Test1/` 是实验一子目录。运行命令和输入、输出路径均以 `NLP/` 为基准，项目可整体移动，不在代码中写死磁盘路径。
+## 功能与结构
 
 ```text
-Test1/
-├── data/                 # 原始语料、train.jsonl、test.jsonl
-├── dictionary.py         # 训练词典、FMM、RMM、BiMM
-├── hmm.py                # HMM 参数训练与 Viterbi 接口（待实现）
-├── llm.py                # Prompt、Few-shot 构建；在线 API 待接入
-├── bpe.py                # BPE 训练与切分接口（待实现）
-├── evaluate.py           # P/R/F1、OOV 召回、Fertility
-├── main.py               # 统一运行与结果输出
-├── requirements.txt      # 当前阶段无第三方依赖
-├── corpus.py             # 严格解码、清洗、审计与固定划分
-├── storage.py            # JSON / JSONL 输出
-├── check_modules.py      # 模块人工样例检查
-├── verify.py             # 保存结果的独立核验
-├── run.ps1               # Windows 运行入口
-└── results/              # 词典、预测、指标、错误案例与审计
+NLP/
+├── README.md
+└── Test1/
+    ├── data/                 # 原始语料、train.jsonl、test.jsonl
+    ├── dictionary.py         # 训练词典、FMM、RMM、BiMM
+    ├── hmm.py                # BMES HMM 训练、对数 Viterbi、保存/加载
+    ├── llm.py                # Prompt、Few-shot、在线 API、校验/重试/缓存
+    ├── bpe.py                # 字符 BPE 训练、合并规则、子词切分、保存/加载
+    ├── evaluate.py           # micro P/R/F1、IV/OOV 召回、OOV 占比、Fertility
+    ├── config.py             # 统一加载 NLP 根目录 .env
+    ├── corpus.py             # 编码、清洗去重、审计、固定 80/20 划分
+    ├── storage.py            # UTF-8 JSON/JSONL 输出
+    ├── main.py               # 统一入口与结果摘要
+    ├── requirements.txt      # 当前无第三方依赖
+    ├── check_modules.py      # 词典分词等人工样例检查
+    ├── test_experiment.py    # 算法独立对照与无网络 API/流程测试
+    ├── verify.py             # 真实结果的独立计数核验
+    ├── run.ps1               # 离线运行脚本
+    ├── REVIEW.md             # 按课程要求的审查记录
+    └── results/              # 模型、预测、指标、错误、差异案例
 ```
 
-现有 `documents/`、`history/` 等目录保留原样。代码重构未改动其中的资料。
+`documents/`、`history/` 保留原样，不属于本次生成的结果。
 
-### 快速运行
+## 运行离线实验
+
+在 NLP 根目录执行：
 
 ```powershell
-# 在 NLP 项目根目录执行
+python Test1/test_experiment.py
 python Test1/main.py
-python Test1/check_modules.py
 python Test1/verify.py
 ```
 
-也可以执行 `./Test1/run.ps1`。默认输入位于 `Test1/data/`，默认输出为 `Test1/results/`。`Test1/data/train.jsonl`、`Test1/data/test.jsonl` 是供后续方法复用的固定划分，`Test1/results/` 保留同名核验副本。所有相对路径参数均相对于运行时的 NLP 根目录，例如 `--output Test1/results_demo`。
+也可以执行 `./Test1/run.ps1`。默认跑 FMM、RMM、BiMM、HMM、BPE，使用同一个完整测试集，不发网络请求。
 
-### 模块状态与调用关系
+显式路径与参数示例：
 
-`main.py → corpus.prepare_corpus → dictionary.build_dictionary → fmm/rmm/bimm → evaluate.evaluate_predictions → storage`。
-
-HMM 与 BPE 当前仅定义类和方法接口，调用会明确抛出 `NotImplementedError`；LLM 已实现 `build_messages(text, training_examples)`，但在线调用也尚未实现。默认运行只评测三种已完成的词典算法，不产生虚构的其他算法结果。`evaluate.fertility(token_count, original_word_count)` 已实现，待 BPE 完成后以同批标准词数为分母计算。
-
-重构验证：新旧数据划分、训练词典、完整预测、全部错误及典型案例逐文件哈希一致；所有非耗时评测指标保持一致。耗时因重新运行会波动，下文表格保留首次实测值，最新耗时见 `results/metrics.json`。
-
-## 运行
-
-项目根目录：`NLP/`。实验一代码位于 `Test1/`，默认输出路径为 `Test1/results/`。
-
-在 NLP 项目根目录执行（跨平台推荐）：
-
-```text
-python Test1/main.py --segmented "Test1/data/1998人民日报（分词）.txt" --pos "Test1/data/1998人民日报（带词性标注）.txt" --output Test1/results
-python Test1/verify.py
+```powershell
+python Test1/main.py --segmented "Test1/data/1998人民日报（分词）.txt" --pos "Test1/data/1998人民日报（带词性标注）.txt" --output Test1/results --seed 2026 --bpe-vocab-size 8000 --bpe-merges 500
 ```
 
-Windows 也可以执行 `powershell -File .\Test1\run.ps1`。参数允许指定其他位置的输入文件，默认输出到 Test1/results，重复运行会覆盖该目录下同名结果。随机种子默认 2026，可用 `--seed` 修改；改变种子后结果不可与本次表格直接混用。
+`--output` 相对于 NLP 根目录，重复运行覆盖同名结果。固定划分写入 `Test1/data/`，并在输出目录保存同名副本。`verify.py` 核验默认 `Test1/results/`。如改变种子，后续各方法应一起重跑，不混用旧结果。
 
-## 格式检查与清洗
+## 在线大模型分词
 
-- 分词版：4,804,499 字节，GBK 严格解码及回编码逐字节一致；UTF-8、GB2312 严格解码失败。GB18030 也可解码，但本项目明确使用 GBK。
-- 词性版：10,215,829 字节，UTF-8 严格解码及回编码一致。两份均 19,484 行。
-- 分词版每行是已分词标题或正文段落，以空白分隔。故这里的样本是“非空行”，不能把每行都叫作一句话或一篇文章。
-- 词性版使用 `词/词性`，并含 `[中央/n 人民/n 广播/vn 电台/n]nt`。去掉外层组合标记，保留内部细粒度词，仅用于审计。
-- 使用 `split()` 清除分隔空白，去掉 1 个空行；保留标点、数字、全半角、大小写，不擅自纠正原文或改变金标准边界。
-- 按去分词空格后的完整文本去重，删除额外重复行 490 条，保留全部原始行号。本次没有同文本不同分词的冲突；代码遇到此类冲突会隔离整组并记录。
-- 两份文件逐行比较有 7,921 行标注或文本不一致，其中 1,843 行文本相同但分词不同，6,078 行文本不同。该数字是逐行比较，不能解释为逐篇文章的差异数量。例如原始行 1463 的分词版为“爱民献忠实”，词性版为“爱民献忠诚”。统一以分词版为金标准，不用词性版补词或修正测试答案。
+已实现兼容 Chat Completions 的 JSON HTTP 接口。服务商需支持 `/chat/completions` 与 `model/messages` 请求格式；不同服务和模型的兼容性需要实际联调。
 
-## 防止数据泄漏
+默认已配置 DeepSeek 官方地址 `https://api.deepseek.com` 和模型 `deepseek-flash`，官方地址使用非思考模式 `thinking.type=disabled`。在 NLP 根目录 `.env` 中配置：
 
-先去重，再用独立 `random.Random(2026)` 打乱；前 `floor(N*0.8)` 条训练，其余测试。因此 18,993 条分为 15,194 / 3,799，比例取整。训练集和测试集完整文本交集为零。
+```dotenv
+LLM_BASE_URL=https://api.deepseek.com
+LLM_MODEL=deepseek-flash
+LLM_API_KEY=你的实际密钥
+```
 
-词典和最大词长完全由训练词频构成：49,520 个词，最长 22 字；不使用老师提供的外部词典、不读取测试词来补词，不利用词性版建立词典。测试金标准只参与评测和错误分析。原始文件 SHA-256、编码和数据统计保存于 manifest.json。
+在 NLP 根目录执行 `python Test1/main.py --with-llm --llm-limit 100` 即可。项目统一通过 `Test1/config.py` 自动加载根目录 `.env`，无需在 PowerShell 另设变量。文件中的配置优先，缺少的项再回退到进程环境变量，默认服务/模型保持 DeepSeek Flash。也支持 `DEEPSEEK_API_KEY`，建议只配置一种密钥变量。
 
-这是去重后的行级随机划分。原文件没有明确文章 ID，同一篇文章的不同段落可能跨集合；本结果衡量同来源行级测试表现，不能声称是按文章隔离或跨领域泛化实验。后续 HMM、API 分词及 BPE 应复用保存的同一划分；API few-shot 示例只从训练集取，BPE 只在训练文本上学习。
+支持空行、注释、单/双引号值、可选 export 前缀和 UTF-8 BOM；不执行命令、不展开变量，不将配置写入进程环境。格式错误只报告行号，不输出配置内容。实际 `.env` 已被根目录 `.gitignore` 排除；`.env.sample` 可作为配置模板。
 
-## 算法与评测
+默认不设置 temperature，以兼容不支持该参数的模型；支持时可显式传 `--llm-temperature 0`。
 
-FMM 从左往右选最长词；RMM 从右往左选最长词；均在没有匹配时退回单字符。BiMM 先比较词数，取较少者；再比较单字词数，取较少者；仍相同则取 FMM。该启发式规则固定，不根据测试结果调参。
+Few-shot 使用训练集前 3 条长度在 8–80 字符的样本，测试文本只有去分词空格后的原文，标准分词不发送给模型。Prompt 要求返回 JSON 词数组并逐字保留原文。拒绝空词、非字符串、解释性文本及遗漏/修改字符；校验失败或瞬时网络错误最多重试 2 次，不用词典预测冒充模型输出。HTTP 认证等非瞬时错误直接报错。
 
-按每行原文的字符偏移构造每个词的半开区间 `[start,end)`，仅起止边界同时相同才算词正确。每行单独计数后汇总：P=正确词数/预测词数，R=正确词数/标准词数，F1=2PR/(P+R)。这是 micro 词级边界评测，包含标点；不是只比较单个切分点，也不是只看词字符串是否存在。所有输出都断言拼接后等于原文。
+在线默认从固定测试集按种子抽 100 行（不筛掉长文本），所有离线方法也在同一子集重新测时与评测。完整测试集共有 3,799 行；需要全量在线比较可传 `--llm-limit 3799`。子集结果位于 `Test1/results/llm_comparison/`，不得直接与离线全测试集指标比较。
 
-## 本次真实结果
+每条成功响应缓存于 `Test1/results/llm_cache/`，缓存键包括服务地址、模型、Prompt、Few-shot、参数和测试原文；复跑会复用。`run_config.json` 记录在线任务是否完成；仅成功跑完整个所选子集才生成本次在线汇总指标。失败时可修正配置重跑，已成功请求可从缓存恢复。
 
-测试标准词总数 227,890，OOV 词次 6,543（2.8711%）。
+`request_info.jsonl` 区分缓存命中与真实请求；`network_seconds` 仅统计本次实际请求，包含其重试等待。缓存中的历史耗时不会计入本次网络耗时。在线总耗时包括缓存 I/O、网络和重试，不能解读为纯模型推理速度。离线方法在同一子集的分词耗时另行实测。
 
-|方法|Precision|Recall|F1|正确词数|预测词数|分词耗时/秒|
-|---|---:|---:|---:|---:|---:|---:|
-|FMM|91.8209%|94.7896%|93.2816%|216,016|235,258|0.4473|
-|RMM|92.0599%|95.0327%|93.5227%|216,570|235,249|0.4522|
-|BiMM|92.1027%|95.0244%|93.5407%|216,551|235,119|0.9073|
+**当前状态：DeepSeek Flash 已完成 100 条真实在线实验。六种方法在同一子集上完成比较。历史结果见 reference_results/，同学需使用自己的 API 密钥重跑；模拟测试不会访问网络。**
 
-耗时只含整批测试文本的分词及预测列表生成，不含读文件、构词典、评测和写文件，为本机单次实测，存在机器与运行波动。BiMM 要运行两个方向，耗时约为单向两倍。BiMM 的总词级 F1 略高，但完整行正确数 1,400，低于 RMM 的 1,419，说明指标衡量角度不同。
+DeepSeek 配置依据：[DeepSeek 官方 API 文档](https://api-docs.deepseek.com/) 与 [Chat Completions 参数](https://api-docs.deepseek.com/api/create-chat-completion/)。
 
-三种方法 OOV 召回分别为 2.1550%、2.1703%、2.1550%，说明纯词典匹配难以识别未登录多字词；单字符回退偶尔能正确识别未登录单字词。
+通用接口参考：[Chat Completions 官方参考](https://developers.openai.com/api/reference/resources/chat/subresources/completions/methods/create)。
 
-典型错误（BiMM，实际测试集）：
+## 语料检查和防止泄漏
 
-|文本|标准切分|预测|说明|
-|---|---|---|---|
-|真情动人心|真情 / 动 / 人心|真情 / 动人 / 心|各标准词均已登录，局部最长匹配仍产生交叉歧义|
-|同日月喜忧|同 / 日月 / 喜 / 忧|同日 / 月 / 喜 / 忧|同词数与单字数规则不足以判断语义|
-|观雪|观雪|观 / 雪|训练词典缺少“观雪”，被拆为单字|
+- 分词版 4,804,499 字节，严格 GBK 解码和回编码一致；UTF-8、GB2312 严格解码失败。词性版 10,215,829 字节，严格 UTF-8 解码和回编码一致。两份各 19,484 行，哈希见 `results/manifest.json`。
+- 样本单位为原始非空行，可能是标题或段落，不把它们称为文章或单句。只规范分隔空白，保留标点、数字、全半角及原始字形。
+- 删除 1 个空行、490 条重复文本，余 18,993 条。重复按拼接后的完整文本判断，划分前处理；若同文本存在不同分词标注则隔离整组，本次无此类冲突。
+- 使用 `random.Random(2026)` 打乱，训练取 `floor(0.8*N)`：15,194 行训练、3,799 行测试。完整文本交集为零；同一文章不同段落仍可能跨集合，不声称文章级隔离。
+- 词典 49,520 词、最大词长 22，全部由训练集建立。HMM 仅用训练集词标注；BPE 仅用训练原文；Few-shot 仅用训练集。测试标准边界只用于评测和事后分析。
+- 词性版包含 `词/词性` 和 `[中央/n ... 电台/n]nt`，用于去组合标记后的逐行审计，不用于补词。共 7,921 行与分词版不一致，其中 1,843 行文本相同但边界不同、6,078 行文本不同。统一用分词版金标准，不混合标注。
 
-## 输出文件
+## 算法与指标口径
 
-- `train.jsonl`、`test.jsonl`：固定划分，含文本、标准词、原始行号和文本哈希 ID。
-- `dictionary.tsv`：仅训练集词及其词频。
-- `manifest.json`：编码、源文件哈希、预处理和划分统计。
-- `metrics.json`、`metrics.csv`：精确评测计数、P/R/F1、OOV 召回及耗时。
-- `FMM/RMM/BiMM_predictions.jsonl`：每条测试文本的完整预测。
-- `*_errors.jsonl`：所有错误；`*_typical_errors.jsonl`：有 OOV 与无 OOV 各选最短的 10 条错误（固定排序，方便查看，不代表错误类别的分布）。
-- `pos_audit.jsonl`：两份语料逐行差异；`annotation_conflicts.jsonl`：同文本分词冲突，本次为空。
+FMM、RMM 每次选最长词，匹配失败回退单字。BiMM 依次优先词数少、单字词数少，仍相同则取 FMM；规则固定，不在测试集调参。
 
-check_modules.py 包含方向匹配、BiMM 决策、OOV 回退、边界计数、组合词性解析、Fertility 和 Few-shot 的人工样例断言；verify.py 独立核对保存后的词典频次、集合交叉、预测文本及所有词级计数。
+HMM 用词标注转换为 BMES；监督统计初始、转移、字符发射概率，使用 alpha=0.1 加法平滑并约束合法状态转移。未知字符使用训练得到的平滑概率，不能读取测试频次。Viterbi 用对数概率及回溯，终止状态限定 E/S；模型保存在 `hmm_model.json`。
 
-## 如何放进老师的报告模板
+BPE 从训练原文的字符开始，以加权相邻对频次学习合并。无监督预切分规则在训练和推理一致：连续汉字、连续字母数字及单独其他字符；不使用测试标准词边界。使用倒排索引与堆更新频次，并按字符序打破频次平局，结果可复现。默认至多 500 次合并、目标词表上限 8,000，本次实际 5,069 token、500 次合并；不保证达到目标词表大小。未见字符保留原字符，不变为丢失原文的 UNK。模型保存在 `bpe_model.json`。
 
-已读取模板，包含摘要、实验内容、实验原理、总框图、主要程序模块、实验结果、总结及参考文献。本阶段说明可分别填入这些栏目：内容写预处理与三种词典分词；原理写匹配规则与边界公式；框图写“严格解码→清洗去重→固定划分→训练词典→测试分词→评测与错误分析”；模块写 dictionary.py、corpus.py 和 evaluate.py 的对应函数；结果采用上表和三个错误案例。
+词级评测比较每个词的完整半开区间 `[start,end)`，行内分别计算后累加：P=正确词数/预测词数，R=正确词数/标准词数，F1=2PR/(P+R)。包含标点，不仅比较切分点。OOV 以标准词是否出现于训练词典判断，OOV 召回按词次统计；另存 IV 召回和 OOV 占比。
 
-本阶段还未完成 HMM、在线大模型和 BPE，不应将阶段结果写成整个课程实验已经完成。完整报告后续控制在五页以内。
+BPE 的主要切分粒度指标为 `Fertility = token 总数 / 同批标准词总数`。额外输出其词边界 P/R/F1 方便诊断，但 BPE 目标并非恢复语言学词边界，不能只凭词级 F1 判断其下游语言模型价值。保留未知字符的覆盖能力与准确恢复 OOV 词边界也不是同一个指标。
+
+## 真实运行结果与分析入口
+
+完整测试集标准词 227,890 次，OOV 6,543 次（2.8711%）。
+
+|方法|Precision|Recall|F1|OOV召回|
+|---|---:|---:|---:|---:|
+|FMM|91.8209%|94.7896%|93.2816%|2.1550%|
+|RMM|92.0599%|95.0327%|93.5227%|2.1703%|
+|BiMM|92.1027%|95.0244%|93.5407%|2.1550%|
+|HMM|81.1469%|81.1786%|81.1628%|53.2783%|
+|BPE|44.7665%|62.3849%|52.1273%|2.2620%|
+
+BPE Fertility 为 1.3936。HMM 的总体 F1 低于训练词典方法，但 OOV 召回显著更高，体现字符状态建模的不同取舍。这是当前简单一阶 HMM 的实测结果，不能泛化为所有统计模型都低于词典方法。
+
+最新训练时间、分词时间与吞吐量见自动生成的 `Test1/results/summary.md` 和 `metrics.json`，均为本机单次实测，训练、分词分别计时，分词不含评测与写文件；词典构建时间未计入训练时间列。
+
+- `*_predictions.jsonl`：每条原文、标准词、预测、OOV 词和来源行号。
+- `*_errors.jsonl`：所有错误；`*_typical_errors.jsonl`：有 OOV、无 OOV 各选最短 10 条，便于阅读，不代表类别分布。
+- `direction_disagreement_cases.jsonl`：FMM/RMM 给出不同切分的真实测试案例，并附全部离线方法结果。方向分歧只是歧义候选，不能自动等同于已人工确认的语义歧义。
+- `pos_audit.jsonl`、`annotation_conflicts.jsonl`：输入标注差异与冲突审计。
+
+如“真情动人心”，标准为“真情 / 动 / 人心”，BiMM 为“真情 / 动人 / 心”，是已登录词的交叉歧义；“观雪”被词典算法切成单字，体现未登录词问题。可从各算法预测记录中核对 HMM 与 BPE 在相同案例的差异。
+
+## 核验与提交范围
+
+`test_experiment.py` 包含 11 项测试：Viterbi 与穷举最优路径对照、HMM 概率归一化、BPE 与朴素合并对照、模型保存/加载、零命中和无效边界评测、API 响应校验、模拟请求缓存、同子集在线流程、DeepSeek 默认地址/模型和请求参数。模拟测试不访问网络。
+
+`verify.py` 独立重算真实预测的词边界计数与 F1，核对训练词频和集合交叉；`check_modules.py` 保留词典算法人工样例。所有数据与代码仍在 NLP 项目内，代码未写死 C 盘或 D 盘地址。
+
+已完成实验源程序、完整离线运行和 100 条真实在线比较。五页以内报告可依据这些真实结果另行整理，视频按你的要求不制作。
+
+## 在线失败与续跑
+
+若模型改动原文，程序会将第一个不同字符的位置、应有字符和原文片段反馈给模型，最多重试两次；不读取标准词边界，不自动替换模型结果。成功缓存不删除。每条响应记录实际尝试次数，带纠错重试的实验应在报告中注明。
+
+失败时 `.error.json` 保存响应与诊断，`llm_comparison/failure.json` 记录样本位置，`LLM_partial_predictions.jsonl` 保留已完成预测。重新执行相同命令会复用成功缓存；完整指标只在所选子集全部成功后生成。日志中 cache_hit=True 表示复用缓存，不代表本次再次发起网络请求。
+
+## 从 Git 仓库复现
+
+请先阅读 [REPRODUCE.md](REPRODUCE.md)。仓库保留原始语料和 reference_results/ 历史汇总；results/、派生训练/测试文件和 verification.txt 为本机生成输出，不跟踪。

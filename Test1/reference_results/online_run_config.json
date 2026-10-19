@@ -1,0 +1,9 @@
+{
+  "model": "deepseek-flash",
+  "base_url": "https://api.deepseek.com",
+  "temperature": null,
+  "thinking": "disabled for api.deepseek.com",
+  "seed": 2026,
+  "test_lines": 100,
+  "status": "complete"
+}
