@@ -4,7 +4,7 @@ import json
 from collections import Counter
 from pathlib import Path
 
-base = Path(__file__).parent / 'results'
+base = Path('Test1/results')
 load = lambda name: [json.loads(s) for s in (base / name).read_text(encoding='utf-8').splitlines()]
 train, test = load('train.jsonl'), load('test.jsonl')
 assert len(train) == int((len(train) + len(test)) * 0.8)

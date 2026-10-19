@@ -12,8 +12,8 @@
     "oov_words": 6543,
     "oov_correct": 141,
     "oov_recall": 0.021549747822099955,
-    "segmentation_seconds": 0.4636006000000634,
-    "characters_per_second": 805993.3485848571
+    "segmentation_seconds": 0.4764119000028586,
+    "characters_per_second": 784319.1994107576
   },
   {
     "method": "RMM",
@@ -28,8 +28,8 @@
     "oov_words": 6543,
     "oov_correct": 142,
     "oov_recall": 0.02170258291303683,
-    "segmentation_seconds": 0.4569991000025766,
-    "characters_per_second": 817636.1835239792
+    "segmentation_seconds": 0.46707530000276165,
+    "characters_per_second": 799997.3451770854
   },
   {
     "method": "BiMM",
@@ -44,7 +44,7 @@
     "oov_words": 6543,
     "oov_correct": 141,
     "oov_recall": 0.021549747822099955,
-    "segmentation_seconds": 1.8974588999990374,
-    "characters_per_second": 196926.0045633608
+    "segmentation_seconds": 1.0232678999964264,
+    "characters_per_second": 365162.4369349463
   }
 ]

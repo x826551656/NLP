@@ -2,7 +2,7 @@
 
 本目录用于保存自然语言处理课程的实验代码、语料、运行结果和说明文档。
 
-项目位置：`D:\desktop\NLP`。
+项目根目录为 `NLP/`；`Test1/` 是实验一子目录。以下命令和数据路径均相对于 NLP 根目录，不依赖固定盘符。
 
 ## 目录结构
 
@@ -51,12 +51,12 @@ HMM、在线大模型 API 和 BPE 尚未接入。数据采用行级划分，未�
 在 PowerShell 中执行：
 
 ```powershell
-cd D:\desktop\NLP\Test1
-python main.py --segmented "data/1998人民日报（分词）.txt" --pos "data/1998人民日报（带词性标注）.txt"
-python verify.py
+# 在 NLP 项目根目录执行
+python Test1/main.py
+python Test1/verify.py
 ```
 
-也可在该目录执行 `./run.ps1`。
+也可在 NLP 根目录执行 `./Test1/run.ps1`。自定义输出示例：`python Test1/main.py --output Test1/results_demo`；相对路径参数以 NLP 根目录为基准。
 
 默认随机种子为 `2026`，输出保存到 `Test1/results/`。重复运行会覆盖同名结果文件；修改种子后应重新评测，并同步更新报告中的结果。
 

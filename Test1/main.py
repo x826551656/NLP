@@ -11,10 +11,13 @@ from dictionary import build_dictionary, fmm, rmm, bimm
 from evaluate import evaluate_predictions, typical_errors
 from storage import save, jsonl
 
-ROOT = Path(__file__).resolve().parent
+# 从 NLP 项目根目录运行，所有默认数据路径相对于该工作目录。
+EXPERIMENT_DIR = Path('Test1')
 
 
 def run(args):
+    if not (EXPERIMENT_DIR / 'main.py').is_file():
+        raise SystemExit('请从 NLP 项目根目录运行：python Test1/main.py')
     out = args.output
     out.mkdir(parents=True, exist_ok=True)
     train, test, conflicts, audit, stats = prepare_corpus(args.segmented, args.pos, args.seed)
@@ -22,7 +25,7 @@ def run(args):
     vocab = set(frequency)
     maximum = max(map(len, vocab))
     # The canonical split lives under data/; results/ copies preserve prior outputs.
-    for destination in {ROOT / 'data', out}:
+    for destination in {EXPERIMENT_DIR / 'data', out}:
         jsonl(destination / 'train.jsonl', train)
         jsonl(destination / 'test.jsonl', test)
     jsonl(out / 'annotation_conflicts.jsonl', conflicts)
@@ -62,8 +65,8 @@ def run(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--segmented', type=Path, default=ROOT / 'data/1998人民日报（分词）.txt')
-    parser.add_argument('--pos', type=Path, default=ROOT / 'data/1998人民日报（带词性标注）.txt')
-    parser.add_argument('--output', type=Path, default=ROOT / 'results')
+    parser.add_argument('--segmented', type=Path, default=EXPERIMENT_DIR / 'data/1998人民日报（分词）.txt')
+    parser.add_argument('--pos', type=Path, default=EXPERIMENT_DIR / 'data/1998人民日报（带词性标注）.txt')
+    parser.add_argument('--output', type=Path, default=EXPERIMENT_DIR / 'results')
     parser.add_argument('--seed', type=int, default=2026)
     run(parser.parse_args())

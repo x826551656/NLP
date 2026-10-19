@@ -4,7 +4,7 @@
 
 ## 模块化结构
 
-课程项目名称可记作 ChineseSegmentation，实际根目录沿用 `D:\desktop\NLP\Test1`（实验一），不新增重复的嵌套目录。
+项目根目录为 `NLP/`，`Test1/` 是实验一子目录。运行命令和输入、输出路径均以 `NLP/` 为基准，项目可整体移动，不在代码中写死磁盘路径。
 
 ```text
 Test1/
@@ -29,13 +29,13 @@ Test1/
 ### 快速运行
 
 ```powershell
-cd D:\desktop\NLP\Test1
-python main.py
-python check_modules.py
-python verify.py
+# 在 NLP 项目根目录执行
+python Test1/main.py
+python Test1/check_modules.py
+python Test1/verify.py
 ```
 
-也可以执行 `./run.ps1`。`main.py` 默认查找本项目的原始语料，输出到本项目的 `results/`；支持原有输入、输出路径和随机种子参数。`data/train.jsonl`、`data/test.jsonl` 是供后续方法复用的固定划分，`results/` 同名副本用于兼容现有核验。
+也可以执行 `./Test1/run.ps1`。默认输入位于 `Test1/data/`，默认输出为 `Test1/results/`。`Test1/data/train.jsonl`、`Test1/data/test.jsonl` 是供后续方法复用的固定划分，`Test1/results/` 保留同名核验副本。所有相对路径参数均相对于运行时的 NLP 根目录，例如 `--output Test1/results_demo`。
 
 ### 模块状态与调用关系
 
@@ -47,16 +47,16 @@ HMM 与 BPE 当前仅定义类和方法接口，调用会明确抛出 `NotImplem
 
 ## 运行
 
-项目根目录：`D:\desktop\NLP\Test1`。代码、语料和结果均位于此目录，默认输出到 `D:\desktop\NLP\Test1\results`。
+项目根目录：`NLP/`。实验一代码位于 `Test1/`，默认输出路径为 `Test1/results/`。
 
-在本目录执行（跨平台推荐）：
+在 NLP 项目根目录执行（跨平台推荐）：
 
 ```text
-python main.py --segmented "data/1998人民日报（分词）.txt" --pos "data/1998人民日报（带词性标注）.txt"
-python verify.py
+python Test1/main.py --segmented "Test1/data/1998人民日报（分词）.txt" --pos "Test1/data/1998人民日报（带词性标注）.txt" --output Test1/results
+python Test1/verify.py
 ```
 
-Windows 也可以执行 `powershell -File .\run.ps1`。参数允许指定其他位置的输入文件，默认输出到项目内 results，重复运行会覆盖该目录下同名结果。随机种子默认 2026，可用 `--seed` 修改；改变种子后结果不可与本次表格直接混用。
+Windows 也可以执行 `powershell -File .\Test1\run.ps1`。参数允许指定其他位置的输入文件，默认输出到 Test1/results，重复运行会覆盖该目录下同名结果。随机种子默认 2026，可用 `--seed` 修改；改变种子后结果不可与本次表格直接混用。
 
 ## 格式检查与清洗
 
